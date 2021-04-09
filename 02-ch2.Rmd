@@ -108,7 +108,7 @@ create <- function(classes=char0,parents=char0){
   for(name in parents){
     mro <- c(mro,name)
     ancestors <- attr(get(name),'type')
-    mro <- c(mro,ancestors(ancestors != name))
+    mro <- c(mro,ancestors[ancestors != name])
     
   }
   
