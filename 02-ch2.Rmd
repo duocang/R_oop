@@ -126,6 +126,39 @@ attr(a,'class') <- 'assignment'
 teacher(a)
 ```
 
+上面的student和teacher在概念上市class，但实质又是generic function.
+
+这种设计以lecture ,assignment ,exam 对象也可以。
+```{r}
+lecture <- function(x, ...) UseMethod("lecture")
+assignment <- function(x, ...) UseMethod("assignment")
+exam <- function(x, ...) UseMethod("exam")
+
+lecture.teacher <- function(x) print("讲课")
+assignment.teacher <- function(x) print("布置作业")
+exam.teacher <- function(x) print("出考卷")
+
+lecture.student <- function(x) print("听课")
+assignment.student <- function(x) print("写作业")
+exam.student <- function(x) print("考试")
+
+a<-'teacher'
+b<-'student'
+
+class(a) <- 'teacher'
+class(b) <- 'student'
+
+lecture(a)
+lecture(b)
+
+assignment(a)
+assignment(b)
+
+exam(a)
+exam(b)
+```
+
+
 + 继承
 
 ```{r warning=FALSE}
