@@ -51,14 +51,44 @@ R主要面向统计计算，而且代码量一般不会很大，几十行，几�
 
 一句话，随着R语言的发展，R面向对象编程一定是一个大的趋势。
 
-## R的面向对象编程
 
 R的面向对象是基于泛型函数(generic function)的，而不是基于类层次结构，接下来我们从面向对象的3个特征入手，分别用R语言进行实现。
+
+**面向对象的3个特征：封装，继承，多态**
+
+**封装**：是把客观事物封装成抽象的类，并且类可以把自己的数据和方法只让可信的类或者对象操作，对不可信的进行信息隐藏。
+<img src="https://raw.githubusercontent.com/duocang/images/master/PicGo/20210409224651.png"/>
+我们通过面向对象的思想，定义老师和学生两个对象，并分别定义老师和学生的行为。
+
+- 老师的行为：讲课，布置作业，批作业
+- 学生的行为：听课，写作业，考试
+
+**通过封装就把两个客观事物进行了抽象，并设置了事情的行为。**
+
+**继承**：子类自动共享父类数据结构和方法的机制，这是类之间的一种关系。在定义和实现一个类的时候，可以在一个已经存在的类的基础之上来进行，使用现有类的所有功能，并在无需重新编写原来的类的情况下对这些功能进行扩展。通过继承创建的新类称为“子类”或“派生类”；被继承的类称为“基类”、“父类”或“超类”
+<img src="https://raw.githubusercontent.com/duocang/images/master/PicGo/20210409224826.png"/>
+
+通常每门课都会从学生中选出这门课的课代表，来帮助老师和其他同学的沟通。课代表会有一些比普通同学更多特权。通过继承关系，把普通同学和课代表区别为两个子类，课代表不仅有普通同学的行为，还有帮助老师批作业的行为。
+
+**多态**: 指由继承而产生的相关的不同的类，其对象对同一消息会做出不同的响应。
+<img src="https://raw.githubusercontent.com/duocang/images/master/PicGo/20210409225116.png"/>
+
+临近期末考试时，总有考的好的同学和考的不好的同学。所以，对于优等生来说，他的考试结果是优；次等生，考试结果就不是太好。相同行为对于由继承而产生的相关的不同的对象，结果是不同的。
+
+所以，通过面向对象的思想，我们可以把客观世界的事物都进行抽象。
+
+**is a 和 has a**
+
+在客观世界中有若干类，这些类之间有一定的结构关系。通常有两种主要的结构关系，is a，和 has a。
+
+- is a: 为继承关系，比如 菱形、圆形和方形都是一种形状
+- has a：为组合关系或聚合关系，比如 电脑是由显示器、CPU、硬盘等组成
+
+## R的面向对象编程
 
 + 封装
 
 ```{r warning=FALSE}
-
 # 定义teacher对象和行为
 teacher <- function(x,...) UseMethod("teacher")
 teacher.lecture <- function(x,...) print("上课")
@@ -71,7 +101,7 @@ teacher.default <- function(x,...) print("你不是teacher")
 student <- function(x,...) UseMethod("student")
 student.attend <- function(x,...) print("听课")
 student.homework <- function(x,...) print("写作业")
-student.exam <- function(x,...) print("考试")
+student.exam <- function(x, subject="语文") print(paste0(subject, "考试"))
 student.default <- function(x,...) print("你不是student")
 
 #定义两个变量，a老师和b同学
@@ -89,14 +119,16 @@ teacher(a)
 attr(b,'class') <- 'attend'
 student(b)
 
+attr(b, "class") <- "exam"
+student(b, subject="体育")
+
 attr(a,'class') <- 'assignment'
 teacher(a)
-
 ```
 
 + 继承
 
-```r
+```{r warning=FALSE}
 # 给同学对象增加新的行为
 student.correcting <- function(x) print("帮助老师批改作业")
 
@@ -109,9 +141,7 @@ create <- function(classes=char0,parents=char0){
     mro <- c(mro,name)
     ancestors <- attr(get(name),'type')
     mro <- c(mro,ancestors[ancestors != name])
-    
   }
-  
   return(mro)
 }
 
@@ -123,43 +153,148 @@ NewInstance <- function(value=0,classes=char0,parents=char0) {
   return(obj)
 }
 
-# 创建对象实例
+# 创建父对象实例
 StudentObj <- NewInstance()
 # 创建子对象实例
 s1 <- NewInstance("普通同学",classes = 'normal',parents = "StudentObj")
 s2 <- NewInstance('课代表',classes='leader',parents='StudentObj')
 
+# 创建子对象实例
 # 给课代表，增加批改作业行为
 attr(s2,'class') <- c(attr(s2,'class'),'correcting')
+
+# 查看普通同学的对象实例
 s1
 s2
 ```
 
 + 多态
 
-```r
+
+```{r warning=FALSE}
 # 创建优等生和次等生，两个实例
 e1 <- NewInstance("优等生",classes='excellent',parents='StudentObj')
 
 e2 <- NewInstance("次等生",classes='poor',parents='StudentObj')
 
+# 修改同学的考试行为，大于85分的为优秀，小于70分的为及格。
 student.exam <- function(x,score){
   p <- '考试'
   if(score>85) print(paste(p,"优秀"))
   if(score<70) print(paste(p,"及格"))
-
 }
 
 # 执行优等生的考试行为，并输入分数为90
 attr(e1,'class') <- 'exam'
-stuent(e1,90)
-[1] “考试优秀"
-
-attr(e2,'class') <- 'exam'
-
-student(e2,66)
-[1] ”考试及格"
+studen(e1,90)
 ```
 
 通过R语言的面向对象的反省函数，我们就可以实现面向对象的编程。
+
++ R的面向过程编程
+
+接下来，我们再次对比用R语言用面向过程实现上面的逻辑。
+
+定义老师和同学两个对象和行为
+```{r}
+# 辅助变量用于设置初始值
+char0 = character(1)
+
+# 定义老师对象和行为
+teacher_fun<-function(x=char0){
+    if(x=='lecture'){
+        print("讲课")
+    }else if(x=='assignment'){
+        print("布置作业")
+    }else if(x=='correcting'){
+        print("批改作业")
+    }else{
+        print("你不是teacher")
+    }
+}
+
+# 定义同学对象和行为 
+student_fun<-function(x=char0){
+    if(x=='attend'){
+        print("听课")
+    }else if(x=='homework'){
+        print("写作业")
+    }else if(x=='exam'){
+        print("考试")
+    }else{
+        print("你不是student")
+    }
+}
+
+# 执行老师的一个行为
+teacher_fun('lecture')
+
+# 执行同学的一个行为
+student_fun('attend')
+```
+
+区别普通同学和课代表的行为
+
+```{r}
+# 重定义同学的函数，增加角色判断
+student_fun<-function(x=char0,role=0){
+    if(x=='attend'){
+        print("听课")
+    }else if(x=='homework'){
+        print("写作业")
+    }else if(x=='exam'){
+        print("考试")
+    }else if(x=='correcting'){
+        if(role==1){#课代表
+            print("帮助老师批改作业")  
+        }else{
+            print("你不是课代表")  
+        }
+    }else{
+        print("你不是student")
+    }
+}
+
+# 以普通同学的角色，执行课代表的行为
+student_fun('correcting')
+# 以课代表的角色，执行课代表的行为
+student_fun('correcting',1)
+```
+我在修改student_fun()函数的同时，已经增加了原函数的复杂度。
+```{r}
+# 修改同学的函数定义，增加考试成绩参数
+student_fun<-function(x=char0,role=0,score){
+    if(x=='attend'){
+        print("听课")
+    }else if(x=='homework'){
+        print("写作业")
+    }else if(x=='exam'){
+        p<-"考试"
+        if(score>85) print(paste(p,"优秀",sep=""))
+        if(score<70) print(paste(p,"及格",sep=""))
+    }else if(x=='correcting'){
+        if(role==1){#课代表
+            print("帮助老师批改作业")  
+        }else{
+            print("你不是课代表")  
+        }
+    }else{
+        print("你不是student")
+    }
+}
+
+# 执行考试函数，考试成绩为大于85分，为优等生
+student_fun('exam',score=90)
+
+# 执行考试函数，考试成绩为小于70分，为次等生
+student_fun('exam',score=66)
+```
+
+我再一次用面向过程的代码，实现了整个的编辑逻辑。再用到面向过程来写程序的时候，每一次的需求变化，都需要对原始代码进行修改，从而不仅增加了复杂度，而且不利于长久的维护。更多思考留给了大家！
+
+
+
+
+
+
 
